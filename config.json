@@ -1,0 +1,11 @@
+{
+    "pose_sensitivity": 4000,
+    "gaze_sensitivity": 0.5,
+    "blink_threshold": 0.25,
+    "blink_consecutive_frames": 2,
+    "dead_zone_threshold": 0.03,
+    "smoothing_factor": 0.80,
+    "update_every_n_frames": 2,
+    "calibration_file": "calibration.json",
+    "double_blink_window": 0.5
+}
