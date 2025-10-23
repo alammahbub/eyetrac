@@ -102,13 +102,51 @@ def load_calibration():
                 print(f"Error reading {CALIBRATION_FILE}. Please re-calibrate.")
     return None, None
 
-# --- Logging ---
-def log_movement(timestamp, h_ratio, v_ratio, gaze_x, gaze_y, target_x, target_y, final_x, final_y):
-    if not os.path.exists(LOG_FILE):
-        with open(LOG_FILE, "w") as f:
-            f.write("timestamp,h_ratio,v_ratio,gaze_x,gaze_y,target_x,target_y,final_x,final_y\n")
-    with open(LOG_FILE, "a") as f:
-        f.write(f"{timestamp},{h_ratio},{v_ratio},{gaze_x},{gaze_y},{target_x},{target_y},{final_x},{final_y}\n")
+# --- Selective Logging ---
+class SelectiveLogger:
+    def __init__(self, log_file, movement_threshold, input_threshold):
+        self.log_file = log_file
+        self.movement_threshold = movement_threshold
+        self.input_threshold = input_threshold
+        self.last_logged_h_ratio = -1
+        self.last_logged_v_ratio = -1
+        self.last_logged_gaze_x = -1
+        self.last_logged_gaze_y = -1
+        self.last_logged_final_x = -1
+        self.last_logged_final_y = -1
+
+        if not os.path.exists(self.log_file):
+            with open(self.log_file, "w") as f:
+                f.write("timestamp,h_ratio,v_ratio,gaze_x,gaze_y,target_x,target_y,final_x,final_y\n")
+
+    def log(self, timestamp, h_ratio, v_ratio, gaze_x, gaze_y, target_x, target_y, final_x, final_y):
+        h_ratio_diff = abs(h_ratio - self.last_logged_h_ratio)
+        v_ratio_diff = abs(v_ratio - self.last_logged_v_ratio)
+        gaze_x_diff = abs(gaze_x - self.last_logged_gaze_x)
+        gaze_y_diff = abs(gaze_y - self.last_logged_gaze_y)
+        final_x_diff = abs(final_x - self.last_logged_final_x)
+        final_y_diff = abs(final_y - self.last_logged_final_y)
+
+        input_changed = (h_ratio_diff > self.input_threshold or
+                         v_ratio_diff > self.input_threshold or
+                         gaze_x_diff > self.input_threshold or
+                         gaze_y_diff > self.input_threshold)
+
+        output_changed = (final_x_diff > self.movement_threshold or
+                          final_y_diff > self.movement_threshold)
+
+        if input_changed or output_changed:
+            with open(self.log_file, "a") as f:
+                f.write(f"{timestamp},{h_ratio},{v_ratio},{gaze_x},{gaze_y},{target_x},{target_y},{final_x},{final_y}\n")
+
+            self.last_logged_h_ratio = h_ratio
+            self.last_logged_v_ratio = v_ratio
+            self.last_logged_gaze_x = gaze_x
+            self.last_logged_gaze_y = gaze_y
+            self.last_logged_final_x = final_x
+            self.last_logged_final_y = final_y
+
+logger = SelectiveLogger(LOG_FILE, LOGGING_MOVEMENT_THRESHOLD, LOGGING_INPUT_THRESHOLD)
 
 # --- Learning Model ---
 class MovementModel:
@@ -239,7 +277,7 @@ while True:
 
                 # --- Logging and Learning ---
                 timestamp = time.time()
-                log_movement(timestamp, horizontal_ratio, vertical_ratio, gaze_offset_x, gaze_offset_y, _target_mouse_x, _target_mouse_y, final_x, final_y)
+                logger.log(timestamp, horizontal_ratio, vertical_ratio, gaze_offset_x, gaze_offset_y, _target_mouse_x, _target_mouse_y, final_x, final_y)
                 if retrain_counter >= RETRAIN_EVERY_N_FRAMES:
                     model.train()
                     retrain_counter = 0
