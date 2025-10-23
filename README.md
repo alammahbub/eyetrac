@@ -31,7 +31,7 @@ EyeTrac is a Python application that allows you to control your mouse cursor usi
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/your-username/eyetrac.git
+    git clone https://github.com/alammahbub/eyetrac.git
     cd eyetrac
     ```
 2.  Install the required Python libraries:
