@@ -32,6 +32,8 @@ CALIBRATION_FILE = config["calibration_file"]
 LOG_FILE = "movement_log.csv"
 RETRAIN_EVERY_N_FRAMES = 100
 DOUBLE_BLINK_WINDOW = config["double_blink_window"]
+LOGGING_MOVEMENT_THRESHOLD = config["logging_movement_threshold"]
+LOGGING_INPUT_THRESHOLD = config["logging_input_threshold"]
 
 # --- Initialization ---
 pyautogui.FAILSAFE = False
